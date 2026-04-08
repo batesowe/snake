@@ -8,6 +8,7 @@ let inputQueue = [];
 let lastTime = 0;
 let paused = true;
 let gameStarted = false;
+let apple = spawnApple();
 const speed = 100;
 
 document.getElementById("startBtn").onclick = () => {
@@ -30,9 +31,7 @@ requestAnimationFrame(gameLoop);
 function update() {
     if (paused) return;
 
-    if (inputQueue.length > 0){
-        direction = inputQueue.shift();
-    }
+    if (inputQueue.length > 0) direction = inputQueue.shift();
     
     const head = { ...snake[0] };
     const prev = { ...head };
@@ -48,21 +47,16 @@ function update() {
                  || head.y < 0
                  || head.x >= canvas.width
                  || head.y >= canvas.height;
-
     const hitSelf = snake.some(segment => segment.x === head.x && segment.y === head.y);
     if (hitSelf || hitWall) return;
 
-    if (head.x === apple.x && head.y === apple.y) {
-        // Snake eats apple
-        snake.push({}); // add a new segment (will be positioned later)
-
-        // Move apple to a new random spot
-        apple.x = Math.floor(Math.random() * (canvas.width / gridSize)) * gridSize;
-        apple.y = Math.floor(Math.random() * (canvas.height / gridSize)) * gridSize;
-    }
-
     snake.unshift(head);
-    snake.pop();
+
+    if (head.x === apple.x && head.y === apple.y) {
+        apple = spawnApple();
+    } else {
+        snake.pop();
+    }
 }
 
 document.addEventListener("keydown", e => {
@@ -110,10 +104,16 @@ function draw() {
     ctx.fillRect(apple.x, apple.y, gridSize, gridSize);
 }
 
-const apple = {
-    x: Math.floor(Math.random() * (canvas.width / gridSize)) * gridSize,
-    y: Math.floor(Math.random() * (canvas.height / gridSize)) * gridSize
-};
+function spawnApple() {
+    let pos;
+    do {
+        pos ={
+            x: Math.floor(Math.random() * (canvas.width / gridSize)) * gridSize,
+            y: Math.floor(Math.random() * (canvas.height / gridSize)) * gridSize
+        }
+    } while (snake.some(segment => segment.x === pos.x && segment.y === pos.y));
+    return pos;
+}
 
 const keyMap = {
     UP: ["ArrowUp", "w"],
