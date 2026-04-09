@@ -1,21 +1,51 @@
 const canvas = document.getElementById("gameCanvas");
 const ctx = canvas.getContext("2d");
 
-const gridSize = 20;
-let snake = [{ x: 200, y: 200 }];
+const gridSize = 24;
+const cols = 10;
+const rows = 20;
+
+canvas.width = cols * gridSize;
+canvas.height = rows * gridSize;
+
+const startSize = 3;
+const startX = Math.floor(cols / 2) * gridSize;
+const startY = Math.floor(rows / 2) * gridSize;
+
 let direction = "";
+let snake = [];
+for(let i = 0; i < startSize; i++) {
+    snake.push({ x: startX - gridSize * i, y: startY, dir: "RIGHT"});
+}
+
 let inputQueue = [];
 let lastTime = 0;
 let paused = true;
 let gameStarted = false;
-let apple = spawnApple();
-const speed = 100;
+let apples = [];
+let appleAmt = 3;
+const speed = 120;
+
+const appleImg = new Image();
+appleImg.src = "Sprites/apple.png";
+
+const snakeHeadImg = new Image();
+snakeHeadImg.src = "Sprites/snakeHead.png"
+
+const snakeBodyImg = new Image();
+snakeBodyImg.src = "Sprites/snakeBody.png"
+
+const snakeTailImg = new Image();
+snakeTailImg.src = "Sprites/snakeTail.png"
 
 document.getElementById("startBtn").onclick = () => {
     document.getElementById("menu").classList.add("hidden");
     paused = false;
     gameStarted = true;
 };
+
+spawnApples(appleAmt);
+requestAnimationFrame(gameLoop);
 
 function gameLoop(currentTime) {
     if (currentTime - lastTime > speed) {
@@ -25,8 +55,6 @@ function gameLoop(currentTime) {
     }
     requestAnimationFrame(gameLoop);
 }
-
-requestAnimationFrame(gameLoop);
 
 function update() {
     if (paused) return;
@@ -48,12 +76,17 @@ function update() {
                  || head.x >= canvas.width
                  || head.y >= canvas.height;
     const hitSelf = snake.some(segment => segment.x === head.x && segment.y === head.y);
-    if (hitSelf || hitWall) return;
+    if (hitSelf || hitWall) {
+        snake[0].dir = direction;
+        return;
+    }
 
-    snake.unshift(head);
+    snake.unshift({ ...head, dir: direction });
 
-    if (head.x === apple.x && head.y === apple.y) {
-        apple = spawnApple();
+    const eatenIndex = apples.findIndex(a => a.x === head.x && a.y === head.y);
+    if (eatenIndex !== -1) {
+        apples.splice(eatenIndex, 1);
+        spawnApples(1);
     } else {
         snake.pop();
     }
@@ -92,27 +125,47 @@ document.addEventListener("keydown", e => {
 });
 
 function draw() {
+    const angles = { RIGHT: 90, DOWN: 180, LEFT: 270, UP: 0 };
+    ctx.imageSmoothingEnabled = false;
+
     ctx.fillStyle = "black";
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    ctx.fillStyle = "lime";
-    snake.forEach(part => {
-        ctx.fillRect(part.x, part.y, gridSize, gridSize);
+    snake.forEach((part, index) => {
+        console.log(index, snake.length);
+        if (index === 0) {
+            drawRotatedImage(snakeHeadImg, part.x, part.y, angles[part.dir]);
+        }
+        else if (index === snake.length - 1) {
+            drawRotatedImage(snakeTailImg, part.x, part.y, angles[part.dir]);
+        }
+        else {
+            drawRotatedImage(snakeBodyImg, part.x, part.y, angles[part.dir]);
+        }
+        
     });
 
-    ctx.fillStyle = "red";
-    ctx.fillRect(apple.x, apple.y, gridSize, gridSize);
+    apples.forEach(apple => {
+        ctx.drawImage(appleImg, apple.x, apple.y, gridSize, gridSize);
+    });
 }
 
-function spawnApple() {
+function spawnApples(amount) {
+    const totalCells = (canvas.width / gridSize) * (canvas.height / gridSize);
+    const occupiedCells = snake.length + apples.length;
+
+    if (occupiedCells >= totalCells) return;
+
+    for (let i = 0; i < amount; i++) {
     let pos;
     do {
-        pos ={
+        pos = {
             x: Math.floor(Math.random() * (canvas.width / gridSize)) * gridSize,
             y: Math.floor(Math.random() * (canvas.height / gridSize)) * gridSize
-        }
-    } while (snake.some(segment => segment.x === pos.x && segment.y === pos.y));
-    return pos;
+        };
+    } while (snake.some(segment => segment.x === pos.x && segment.y === pos.y) || apples.some(apple => apple.x === pos.x && apple.y === pos.y));
+    apples.push(pos);
+    }   
 }
 
 const keyMap = {
@@ -123,3 +176,10 @@ const keyMap = {
     PAUSE: ["x"]
 };
 
+function drawRotatedImage(img, x, y, angle) {
+    ctx.save();
+    ctx.translate(x + gridSize / 2, y + gridSize / 2);
+    ctx.rotate(angle * Math.PI / 180)
+    ctx.drawImage(img, -gridSize / 2, -gridSize / 2, gridSize, gridSize);
+    ctx.restore();
+}
