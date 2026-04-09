@@ -4,7 +4,6 @@ const ctx = canvas.getContext("2d");
 const gridSize = 24;
 const cols = 10;
 const rows = 20;
-
 canvas.width = cols * gridSize;
 canvas.height = rows * gridSize;
 
@@ -37,6 +36,9 @@ snakeBodyImg.src = "Sprites/snakeBody.png"
 
 const snakeTailImg = new Image();
 snakeTailImg.src = "Sprites/snakeTail.png"
+
+const snakeCornerImg = new Image();
+snakeCornerImg.src = "Sprites/snakeCorner.png"
 
 document.getElementById("startBtn").onclick = () => {
     document.getElementById("menu").classList.add("hidden");
@@ -133,14 +135,21 @@ function draw() {
 
     snake.forEach((part, index) => {
         console.log(index, snake.length);
-        if (index === 0) {
+        if (index === 0) { // head
             drawRotatedImage(snakeHeadImg, part.x, part.y, angles[part.dir]);
         }
-        else if (index === snake.length - 1) {
+        else if (index === snake.length - 1) { // tail
             drawRotatedImage(snakeTailImg, part.x, part.y, angles[part.dir]);
         }
-        else {
-            drawRotatedImage(snakeBodyImg, part.x, part.y, angles[part.dir]);
+        else { // body
+            const prev = snake[index - 1];
+            if (prev.dir !== part.dir) {
+                const cornerAngle = getCornerAngle(part.dir, prev.dir);
+                drawRotatedImage(snakeCornerImg, part.x, part.y, cornerAngle);
+            }
+            else {
+                drawRotatedImage(snakeBodyImg, part.x, part.y, angles[part.dir]);
+            }
         }
         
     });
@@ -182,4 +191,15 @@ function drawRotatedImage(img, x, y, angle) {
     ctx.rotate(angle * Math.PI / 180)
     ctx.drawImage(img, -gridSize / 2, -gridSize / 2, gridSize, gridSize);
     ctx.restore();
+}
+
+function getCornerAngle(from, to) {
+    if (from === "RIGHT" && to === "UP") return 270;
+    if (from === "RIGHT" && to === "DOWN") return 180;
+    if (from === "LEFT" && to === "UP") return 0;
+    if (from === "LEFT" && to === "DOWN") return 90;
+    if (from === "DOWN" && to === "RIGHT") return 0;
+    if (from === "DOWN" && to === "LEFT") return 270;
+    if (from === "UP" && to === "RIGHT") return 90;
+    if (from === "UP" && to === "LEFT") return 180;
 }
