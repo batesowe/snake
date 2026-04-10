@@ -2,7 +2,7 @@ const canvas = document.getElementById("gameCanvas");
 const ctx = canvas.getContext("2d");
 
 const gridSize = 24;
-const cols = 10;
+const cols = 20;
 const rows = 20;
 canvas.width = cols * gridSize;
 canvas.height = rows * gridSize;
@@ -73,12 +73,7 @@ function update() {
 
     if (head.x === prev.x && head.y === prev.y) return;
 
-    const hitWall = head.x < 0
-                 || head.y < 0
-                 || head.x >= canvas.width
-                 || head.y >= canvas.height;
-    const hitSelf = snake.some(segment => segment.x === head.x && segment.y === head.y);
-    if (hitSelf || hitWall) {
+    if (hitSelf(head) || hitWall(head)) {
         snake[0].dir = direction;
         return;
     }
@@ -122,7 +117,9 @@ document.addEventListener("keydown", e => {
         (newDir === "LEFT" && lastDir !== "RIGHT") ||
         (newDir === "RIGHT" && lastDir !== "LEFT")
     ) {
-        inputQueue.push(newDir);
+        if (inputQueue.length < 4) {
+            inputQueue.push(newDir);
+        }
     }
 });
 
@@ -130,20 +127,28 @@ function draw() {
     const angles = { RIGHT: 90, DOWN: 180, LEFT: 270, UP: 0 };
     ctx.imageSmoothingEnabled = false;
 
-    ctx.fillStyle = "black";
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    for (let row = 0; row < rows; row++) {
+        for (let col = 0; col < cols; col++) {
+            ctx.fillStyle = (row + col) % 2 === 0
+                ? "#4e5885"
+                : "#25293a";
+            ctx.fillRect(col * gridSize, row * gridSize, gridSize, gridSize)
+        }
+    }
 
     snake.forEach((part, index) => {
-        console.log(index, snake.length);
+        const prev = snake[index - 1]; 
+
         if (index === 0) { // head
             drawRotatedImage(snakeHeadImg, part.x, part.y, angles[part.dir]);
         }
         else if (index === snake.length - 1) { // tail
-            drawRotatedImage(snakeTailImg, part.x, part.y, angles[part.dir]);
+            drawRotatedImage(snakeTailImg, part.x, part.y, angles[prev.dir]);
         }
         else { // body
-            const prev = snake[index - 1];
             if (prev.dir !== part.dir) {
+                if (prev.dir === 0) return;
+
                 const cornerAngle = getCornerAngle(part.dir, prev.dir);
                 drawRotatedImage(snakeCornerImg, part.x, part.y, cornerAngle);
             }
@@ -151,7 +156,6 @@ function draw() {
                 drawRotatedImage(snakeBodyImg, part.x, part.y, angles[part.dir]);
             }
         }
-        
     });
 
     apples.forEach(apple => {
@@ -202,4 +206,24 @@ function getCornerAngle(from, to) {
     if (from === "DOWN" && to === "LEFT") return 270;
     if (from === "UP" && to === "RIGHT") return 90;
     if (from === "UP" && to === "LEFT") return 180;
+}
+
+function hitWall(head) {
+    return head.x < 0
+        || head.y < 0
+        || head.x >= canvas.width
+        || head.y >= canvas.height;
+}
+
+function hitSelf(head) {
+    return snake.some(segment => segment.x === head.x && segment.y === head.y);;
+}
+
+function getNextHead() {
+    const next = { ...snake[0] };
+    if (direction === "RIGHT") next.x += gridSize;
+    if (direction === "LEFT")  next.x -= gridSize;
+    if (direction === "UP")    next.y -= gridSize;
+    if (direction === "DOWN")  next.y += gridSize;
+    return next;
 }
