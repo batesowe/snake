@@ -1,29 +1,31 @@
 const canvas = document.getElementById("gameCanvas");
 const ctx = canvas.getContext("2d");
 
+let selectedGrid = 12;
 const gridSize = 24;
-const cols = 20;
-const rows = 20;
+let cols = 12;
+let rows = 12;
 canvas.width = cols * gridSize;
 canvas.height = rows * gridSize;
-
-const startSize = 3;
-const startX = Math.floor(cols / 2) * gridSize;
-const startY = Math.floor(rows / 2) * gridSize;
-
-let direction = "";
-let snake = [];
-for(let i = 0; i < startSize; i++) {
-    snake.push({ x: startX - gridSize * i, y: startY, dir: "RIGHT"});
-}
 
 let inputQueue = [];
 let lastTime = 0;
 let paused = true;
 let gameStarted = false;
 let apples = [];
-let appleAmt = 3;
+let appleAmt = 1;
 const speed = 120;
+
+const startSize = 3;
+const startX = Math.floor(cols / 2) * gridSize;
+const startY = Math.floor(rows / 2) * gridSize;
+let direction = "";
+let snake = [];
+for (let i = 0; i < startSize; i++) {
+    snake.push({ x: startX - gridSize * i, y: startY, dir: "RIGHT" });
+}
+
+spawnApples(appleAmt);
 
 const appleImg = new Image();
 appleImg.src = "Sprites/apple.png";
@@ -40,13 +42,85 @@ snakeTailImg.src = "Sprites/snakeTail.png"
 const snakeCornerImg = new Image();
 snakeCornerImg.src = "Sprites/snakeCorner.png"
 
+
+document.getElementById("resumeBtn").onclick = () => {
+    document.getElementById("pauseMenu").classList.add("hidden");
+};
+
+document.getElementById("newGameBtn").onclick = () => {
+    document.getElementById("settingsMenu").classList.add("hidden");
+    document.getElementById("mainMenu").classList.remove("hidden");
+};
+
+document.getElementById("backBtn").onclick = () => {
+    document.getElementById("settingsMenu").classList.add("hidden");
+    document.getElementById("mainMenu").classList.remove("hidden");
+};
+
+document.getElementById("settingsBtn").onclick = () => {
+
+    document.getElementById("settingsMenu").classList.remove("hidden");
+};
+
+document.querySelectorAll("[data-apples]").forEach(btn => {
+    btn.onclick = () => {
+        document.querySelectorAll("[data-apples]").forEach(b => b.classList.remove("active"));
+        btn.classList.add("active");
+        appleAmt = parseInt(btn.dataset.apples);
+        startGame();
+    };
+});
+
+document.querySelectorAll("[data-grid]").forEach(btn => {
+    btn.onclick = () => {
+        document.querySelectorAll("[data-grid]").forEach(b => b.classList.remove("active"));
+        btn.classList.add("active");
+        selectedGrid = parseInt(btn.dataset.grid);
+        startGame();
+    };
+});
+
 document.getElementById("startBtn").onclick = () => {
     document.getElementById("menu").classList.add("hidden");
     paused = false;
     gameStarted = true;
 };
 
-spawnApples(appleAmt);
+document.getElementById("resumeBtn").onclick = () => {
+    document.getElementById("pauseMenu").classList.add("hidden");
+    paused = false;
+};
+
+document.getElementById("newGameBtn").onclick = () => {
+    document.getElementById("pauseMenu").classList.add("hidden");
+    document.getElementById("menu").classList.remove("hidden");
+    paused = true;
+    gameStarted = false;
+    startGame();
+};
+
+function startGame() {
+    rows = selectedGrid;
+    cols = selectedGrid;
+    canvas.width = cols * gridSize;
+    canvas.height = rows * gridSize;
+
+    direction = "";
+    inputQueue = [];
+    snake = [];
+    for (let i = 0; i < startSize; i++) {
+        snake.push({
+            x: Math.floor(cols / 2) * gridSize - gridSize * i,
+            y: Math.floor(rows / 2) * gridSize,
+            dir: "RIGHT"
+        });
+    }
+
+    apples = [];
+    spawnApples(appleAmt);
+}
+
+
 requestAnimationFrame(gameLoop);
 
 function gameLoop(currentTime) {
@@ -92,9 +166,26 @@ function update() {
 document.addEventListener("keydown", e => {
     if (keyMap.PAUSE.includes(e.key)) {
         if (!gameStarted) return;
-        paused = !paused;
+        paused = !paused
+        if (paused) {
+            document.getElementById("pauseMenu").classList.remove("hidden");
+        }
+        else {
+            document.getElementById("pauseMenu").classList.add("hidden");
+        }
         inputQueue = [];
         return;
+    } 
+
+    if (keyMap.RESTART.includes(e.key)) {
+        startGame()
+    }
+
+    if (keyMap.STARTGAME.includes(e.key)) {
+        document.getElementById("menu").classList.add("hidden");
+        document.getElementById("pauseMenu").classList.add("hidden");
+        paused = false;
+        gameStarted = true;
     } 
 
     if (!gameStarted || paused) return;
@@ -186,7 +277,9 @@ const keyMap = {
     DOWN: ["ArrowDown", "s"],
     LEFT: ["ArrowLeft", "a"],
     RIGHT: ["ArrowRight", "d"],
-    PAUSE: ["x"]
+    PAUSE: ["Escape"],
+    STARTGAME: [" "],
+    RESTART: ["r"]
 };
 
 function drawRotatedImage(img, x, y, angle) {
@@ -217,13 +310,4 @@ function hitWall(head) {
 
 function hitSelf(head) {
     return snake.some(segment => segment.x === head.x && segment.y === head.y);;
-}
-
-function getNextHead() {
-    const next = { ...snake[0] };
-    if (direction === "RIGHT") next.x += gridSize;
-    if (direction === "LEFT")  next.x -= gridSize;
-    if (direction === "UP")    next.y -= gridSize;
-    if (direction === "DOWN")  next.y += gridSize;
-    return next;
 }
