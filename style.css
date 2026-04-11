@@ -88,3 +88,6 @@ canvas {
     display: none;
 }
 
+#menu button.hidden {
+    display: none;
+}

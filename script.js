@@ -55,11 +55,12 @@ document.getElementById("newGameBtn").onclick = () => {
 document.getElementById("backBtn").onclick = () => {
     document.getElementById("settingsMenu").classList.add("hidden");
     document.getElementById("mainMenu").classList.remove("hidden");
+    document.getElementById("settingsBtn").classList.remove("hidden");
 };
 
 document.getElementById("settingsBtn").onclick = () => {
-
     document.getElementById("settingsMenu").classList.remove("hidden");
+    document.getElementById("settingsBtn").classList.add("hidden");
 };
 
 document.querySelectorAll("[data-apples]").forEach(btn => {
