@@ -1,11 +1,12 @@
-This project is a simple snake game made in JavaScript, HTML, and CSS. It's playable using GitHub Pages [HERE](https://batesowe.github.io/snake/).
+This project is a simple snake game made in JavaScript, HTML, and CSS. Playable in browser using GitHub Pages [HERE](https://batesowe.github.io/snake/).
 
-![Screenshot](<img width="500" height="500" alt="image" src="https://github.com/user-attachments/assets/5335f8d2-035b-4621-bd3a-36a12283c594" />)
+![Screenshot](https://github.com/user-attachments/assets/5335f8d2-035b-4621-bd3a-36a12283c594)
 
 ## Controls:
-|  Move   | WASD / Arrow Keys |
-|  Pause  |      Escape       |
-| Restart |        R          |
+|--------|------|
+| Move | WASD / Arrow Keys |
+| Pause | Escape |
+| Restart | R |
 
 ## Features: 
 - Apple spawn settings (1, 3, 5, 10, 50)
