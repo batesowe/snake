@@ -16,6 +16,11 @@ let apples = [];
 let appleAmt = 1;
 const speed = 120;
 
+let showTurnedHead = "FALSE";
+let prevHeadDir = "RIGHT";
+let headVisualDir = "RIGHT";
+let inputThisTick = false;
+
 const startSize = 3;
 const startX = Math.floor(cols / 2) * gridSize;
 const startY = Math.floor(rows / 2) * gridSize;
@@ -41,6 +46,9 @@ snakeTailImg.src = "Sprites/snakeTail.png"
 
 const snakeCornerImg = new Image();
 snakeCornerImg.src = "Sprites/snakeCorner.png"
+
+const snakeHeadCornerImg = new Image();
+snakeHeadCornerImg.src = "Sprites/snakeHeadCorner.png"
 
 
 document.getElementById("resumeBtn").onclick = () => {
@@ -133,9 +141,11 @@ function gameLoop(currentTime) {
     requestAnimationFrame(gameLoop);
 }
 
+let snakeMoved = false;
+
 function update() {
     if (paused) return;
-
+    
     if (inputQueue.length > 0) direction = inputQueue.shift();
     
     const head = { ...snake[0] };
@@ -148,12 +158,20 @@ function update() {
 
     if (head.x === prev.x && head.y === prev.y) return;
 
-    if (hitSelf(head) || hitWall(head)) {
-        snake[0].dir = direction;
+    const blocked = hitSelf(head) || hitWall(head);
+    const dirChanged = direction !== prevHeadDir;
+
+    if (blocked) {
+        snakeMoved = false;
+        headVisualDir = direction;
         return;
     }
 
+    snakeMoved = true;
+    headVisualDir = direction;
+
     snake.unshift({ ...head, dir: direction });
+    prevHeadDir = snake[1].dir;
 
     const eatenIndex = apples.findIndex(a => a.x === head.x && a.y === head.y);
     if (eatenIndex !== -1) {
@@ -162,6 +180,7 @@ function update() {
     } else {
         snake.pop();
     }
+    inputThisTick = inputQueue.length > 0;
 }
 
 document.addEventListener("keydown", e => {
@@ -179,6 +198,8 @@ document.addEventListener("keydown", e => {
     } 
 
     if (keyMap.RESTART.includes(e.key)) {
+        headVisualDir = "RIGHT";
+        direction = "RIGHT";
         startGame()
     }
 
@@ -201,16 +222,19 @@ document.addEventListener("keydown", e => {
 
     const lastDir = inputQueue.length > 0
         ? inputQueue[inputQueue.length - 1]
-        : direction;
+        : direction === "" 
+            ? "RIGHT"
+            :direction;
 
-    if (
+    if ((direction === "" || newDir !== lastDir) && (
         (newDir === "UP" && lastDir !== "DOWN") ||
         (newDir === "DOWN" && lastDir !== "UP") ||
         (newDir === "LEFT" && lastDir !== "RIGHT") ||
         (newDir === "RIGHT" && lastDir !== "LEFT")
-    ) {
+    )) {
         if (inputQueue.length < 4) {
             inputQueue.push(newDir);
+            inputThisTick = true;
         }
     }
 });
@@ -232,23 +256,31 @@ function draw() {
         const prev = snake[index - 1]; 
 
         if (index === 0) { // head
-            drawRotatedImage(snakeHeadImg, part.x, part.y, angles[part.dir]);
+            if (inputThisTick && !snakeMoved && headVisualDir !== prevHeadDir) {
+                const [turnAngle, flip] = getTurnedHeadAngle(prevHeadDir, headVisualDir);
+                drawRotatedImage(snakeHeadCornerImg, part.x, part.y, turnAngle, flip);
+            } else {
+                drawRotatedImage(snakeHeadImg, part.x, part.y, angles[headVisualDir]);
+            }
         }
         else if (index === snake.length - 1) { // tail
             drawRotatedImage(snakeTailImg, part.x, part.y, angles[prev.dir]);
         }
         else { // body
-            if (prev.dir !== part.dir) {
-                if (prev.dir === 0) return;
+            const effectivePrevDir = prev.dir;
 
-                const cornerAngle = getCornerAngle(part.dir, prev.dir);
-                drawRotatedImage(snakeCornerImg, part.x, part.y, cornerAngle);
+            if (effectivePrevDir !== part.dir) {
+                if (index === 1) {
+                    console.log("part.dir:", part.dir, "effectivePrevDir:", effectivePrevDir);
+                }
+                const [cornerAngle, flip] = getCornerAngle(part.dir, effectivePrevDir);
+                drawRotatedImage(snakeCornerImg, part.x, part.y, cornerAngle, flip);
             }
             else {
                 drawRotatedImage(snakeBodyImg, part.x, part.y, angles[part.dir]);
             }
         }
-    });
+    })
 
     apples.forEach(apple => {
         ctx.drawImage(appleImg, apple.x, apple.y, gridSize, gridSize);
@@ -283,23 +315,40 @@ const keyMap = {
     RESTART: ["r"]
 };
 
-function drawRotatedImage(img, x, y, angle) {
+function drawRotatedImage(img, x, y, angle, flipX = false) {
     ctx.save();
     ctx.translate(x + gridSize / 2, y + gridSize / 2);
     ctx.rotate(angle * Math.PI / 180)
+    if (flipX) ctx.scale(-1, 1);
     ctx.drawImage(img, -gridSize / 2, -gridSize / 2, gridSize, gridSize);
     ctx.restore();
 }
 
 function getCornerAngle(from, to) {
-    if (from === "RIGHT" && to === "UP") return 270;
-    if (from === "RIGHT" && to === "DOWN") return 180;
-    if (from === "LEFT" && to === "UP") return 0;
-    if (from === "LEFT" && to === "DOWN") return 90;
-    if (from === "DOWN" && to === "RIGHT") return 0;
-    if (from === "DOWN" && to === "LEFT") return 270;
-    if (from === "UP" && to === "RIGHT") return 90;
-    if (from === "UP" && to === "LEFT") return 180;
+    // clockwise turns (original sprite)
+    if (from === "LEFT" && to === "UP") return [0, false];
+    if (from === "UP" && to === "RIGHT") return [90, false];
+    if (from === "RIGHT" && to === "DOWN") return [180, false];
+    if (from === "DOWN" && to === "LEFT") return [270, false];
+    // counter-clockwise turns (flipped sprite)
+    if (from === "RIGHT" && to === "UP") return [0, true];
+    if (from === "DOWN" && to === "RIGHT") return [90, true];
+    if (from === "LEFT" && to === "DOWN") return [180, true];
+    if (from === "UP" && to === "LEFT") return [270, true];
+
+    return [0, false];
+}
+
+function getTurnedHeadAngle(bodyDir, headDir) {
+    if (bodyDir === "DOWN" && headDir === "RIGHT") return [0, false];
+    if (bodyDir === "LEFT" && headDir === "DOWN") return [90, false];
+    if (bodyDir === "UP" && headDir === "LEFT") return [180, false];
+    if (bodyDir === "RIGHT" && headDir === "UP") return [270, false];
+    if (bodyDir === "DOWN" && headDir === "LEFT") return [0, true];   // flipped
+    if (bodyDir === "LEFT" && headDir === "UP") return [90, true];  // flipped
+    if (bodyDir === "UP" && headDir === "RIGHT") return [180, true]; // flipped
+    if (bodyDir === "RIGHT" && headDir === "DOWN") return [270, true]; // flipped
+    return [0, false];
 }
 
 function hitWall(head) {
@@ -311,4 +360,13 @@ function hitWall(head) {
 
 function hitSelf(head) {
     return snake.some(segment => segment.x === head.x && segment.y === head.y);;
+}
+
+function getNextHead() {
+    const next = { ...snake[0] };
+    if (direction === "RIGHT") next.x += gridSize;
+    if (direction === "LEFT") next.x -= gridSize;
+    if (direction === "UP") next.y -= gridSize;
+    if (direction === "DOWN") next.y += gridSize;
+    return next;
 }
