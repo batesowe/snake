@@ -8,7 +8,6 @@ This project is a simple snake game made in JavaScript, HTML, and CSS. Playable 
 | Move | WASD / Arrow Keys |
 | Pause | Escape |
 | Restart | R |
-| Start | Space |
 
 ## Features: 
 - Apple spawn settings (1, 3, 5, 10, 50)
