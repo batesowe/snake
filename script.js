@@ -15,11 +15,14 @@ let gameStarted = false;
 let apples = [];
 let appleAmt = 1;
 const speed = 120;
+let score = 0;
 
-let showTurnedHead = "FALSE";
-let prevHeadDir = "RIGHT";
 let headVisualDir = "RIGHT";
-let inputThisTick = false;
+
+let isDead = false;
+let deathTimer = 0;
+let deadSegments = 0;
+const deathSpeed = 120;
 
 const startSize = 3;
 const startX = Math.floor(cols / 2) * gridSize;
@@ -46,10 +49,6 @@ snakeTailImg.src = "Sprites/snakeTail.png"
 
 const snakeCornerImg = new Image();
 snakeCornerImg.src = "Sprites/snakeCorner.png"
-
-const snakeHeadCornerImg = new Image();
-snakeHeadCornerImg.src = "Sprites/snakeHeadCorner.png"
-
 
 document.getElementById("resumeBtn").onclick = () => {
     document.getElementById("pauseMenu").classList.add("hidden");
@@ -109,11 +108,14 @@ document.getElementById("newGameBtn").onclick = () => {
 };
 
 function startGame() {
+    isDead = false;
+    deadSegments = 0;
     rows = selectedGrid;
     cols = selectedGrid;
     canvas.width = cols * gridSize;
     canvas.height = rows * gridSize;
 
+    headVisualDir = "RIGHT";
     direction = "";
     inputQueue = [];
     snake = [];
@@ -133,6 +135,22 @@ function startGame() {
 requestAnimationFrame(gameLoop);
 
 function gameLoop(currentTime) {
+    if (isDead) {
+        if (currentTime - deathTimer > deathSpeed) {
+            deadSegments++;
+            deathTimer = currentTime;
+            if (deadSegments >= snake.length) {
+                gameStarted = false;
+                paused = true;
+                startGame();
+                document.getElementById("menu").classList.remove("hidden");
+            }
+            draw();
+        }
+        requestAnimationFrame(gameLoop);
+        return;
+    }
+
     if (currentTime - lastTime > speed) {
         update();
         draw();
@@ -159,28 +177,25 @@ function update() {
     if (head.x === prev.x && head.y === prev.y) return;
 
     const blocked = hitSelf(head) || hitWall(head);
-    const dirChanged = direction !== prevHeadDir;
 
     if (blocked) {
+        isDead = true;
         snakeMoved = false;
-        headVisualDir = direction;
         return;
     }
 
     snakeMoved = true;
     headVisualDir = direction;
-
     snake.unshift({ ...head, dir: direction });
-    prevHeadDir = snake[1].dir;
 
     const eatenIndex = apples.findIndex(a => a.x === head.x && a.y === head.y);
     if (eatenIndex !== -1) {
         apples.splice(eatenIndex, 1);
+        score++;
         spawnApples(1);
     } else {
         snake.pop();
     }
-    inputThisTick = inputQueue.length > 0;
 }
 
 document.addEventListener("keydown", e => {
@@ -234,7 +249,6 @@ document.addEventListener("keydown", e => {
     )) {
         if (inputQueue.length < 4) {
             inputQueue.push(newDir);
-            inputThisTick = true;
         }
     }
 });
@@ -253,15 +267,11 @@ function draw() {
     }
 
     snake.forEach((part, index) => {
+        if (index < deadSegments) return;
         const prev = snake[index - 1]; 
 
         if (index === 0) { // head
-            if (inputThisTick && !snakeMoved && headVisualDir !== prevHeadDir) {
-                const [turnAngle, flip] = getTurnedHeadAngle(prevHeadDir, headVisualDir);
-                drawRotatedImage(snakeHeadCornerImg, part.x, part.y, turnAngle, flip);
-            } else {
-                drawRotatedImage(snakeHeadImg, part.x, part.y, angles[headVisualDir]);
-            }
+            drawRotatedImage(snakeHeadImg, part.x, part.y, angles[headVisualDir]);
         }
         else if (index === snake.length - 1) { // tail
             drawRotatedImage(snakeTailImg, part.x, part.y, angles[prev.dir]);
