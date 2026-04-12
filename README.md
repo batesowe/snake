@@ -3,10 +3,12 @@ This project is a simple snake game made in JavaScript, HTML, and CSS. Playable 
 ![Screenshot](https://github.com/user-attachments/assets/5335f8d2-035b-4621-bd3a-36a12283c594)
 
 ## Controls:
+| Action | Keys |
 |--------|------|
 | Move | WASD / Arrow Keys |
 | Pause | Escape |
 | Restart | R |
+| Start | Space |
 
 ## Features: 
 - Apple spawn settings (1, 3, 5, 10, 50)
