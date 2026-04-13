@@ -65,6 +65,8 @@ document.getElementById("settingsBtn").onclick = () => {
 };
 
 document.getElementById("startBtn").onclick = () => {
+    document.getElementById("settingsMenu").classList.add("hidden");
+    document.getElementById("settingsBtn").classList.remove("hidden");
     document.getElementById("menu").classList.add("hidden");
     paused = false;
     gameStarted = true;
@@ -85,6 +87,7 @@ document.getElementById("previewBtn").onclick = () => {
 
 document.querySelectorAll(".newGameBtn").forEach(btn => {
     btn.onclick = () => {
+        document.getElementById("gameWin").classList.add("hidden");
         document.getElementById("pauseMenu").classList.add("hidden");
         document.getElementById("gameOver").classList.add("hidden");
         document.getElementById("previewBtn").classList.toggle("hidden");
@@ -209,6 +212,14 @@ function update() {
         apples.splice(eatenIndex, 1);
         score++;
         spawnApples(1);
+
+        if (snake.length >= (canvas.width / gridSize) * (canvas.height / gridSize)) {
+            gameStarted = false;
+            paused = true;
+            snakeSnapshot = snake.map(p => ({ ...p }));
+            document.getElementById("gameWin").classList.remove("hidden");
+            return;
+        }
     } else {
         snake.pop();
     }
@@ -229,7 +240,10 @@ document.addEventListener("keydown", e => {
     } 
 
     if (keyMap.STARTGAME.includes(e.key)) {
+        if (document.getElementById("menu").classList.contains("hidden")) return;
         hideMenus();
+        document.getElementById("settingsMenu").classList.add("hidden");
+        document.getElementById("settingsBtn").classList.remove("hidden");
         paused = false;
         gameStarted = true;
     } 
