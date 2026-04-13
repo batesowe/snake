@@ -393,6 +393,7 @@ function hideMenus() {
     document.getElementById("menu").classList.add("hidden");
     document.getElementById("pauseMenu").classList.add("hidden");
     document.getElementById("gameOver").classList.add("hidden");
+    document.getElementById("gameWin").classList.add("hidden");
     document.getElementById("previewBtn").classList.add("hidden");
 }
 
