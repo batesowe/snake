@@ -1,23 +1,30 @@
-html, body {
+/* =====================
+   BASE
+   ===================== */
+html,
+body {
     display: flex;
     justify-content: center;
     align-items: center;
     height: 100vh;
     background: #111;
     margin: 0;
+    font-family: 'Press Start 2P', monospace;
+    color: white;
 }
 
-#menu, #pauseMenu {
-    position: absolute;
-    top: 0; left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.8);
-    color: white;
+.hidden {
+    display: none !important;
+}
+
+/* =====================
+   GAME
+   ===================== */
+#gameWrapper {
     display: flex;
     flex-direction: column;
-    justify-content: center;
     align-items: center;
+    height: 50vmin;
 }
 
 canvas {
@@ -27,26 +34,53 @@ canvas {
     height: 50vmin;
 }
 
-#menu, #pauseMenu {
-    font-family: 'Press Start 2P', monospace;
-    color: white;
+/* =====================
+   OVERLAYS
+   ===================== */
+#menu,
+#pauseMenu,
+#gameOver {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.8);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
     text-align: center;
 }
 
+#gameOver.transparent {
+    background: rgba(0, 0, 0, 0);
+}
+
+/* =====================
+   HEADINGS
+   ===================== */
 #menu h1 {
     font-size: 2rem;
     margin-bottom: 2rem;
     color: lime;
 }
 
-#menu button.active {
-    background: white;
-    color: black;
+#gameOver h1 {
+    font-size: 2rem;
+    margin-bottom: 2rem;
+    color: red;
 }
 
-#menu button, #pauseMenu button {
+/* =====================
+   BUTTONS
+   ===================== */
+#menu button,
+#pauseMenu button,
+#gameOver button,
+#previewBtn {
     display: block;
-    margin: 1rem auto;
+    margin: 0.5rem auto;
     padding: 0.75rem 1.5rem;
     font-family: 'Press Start 2P', monospace;
     font-size: 0.75rem;
@@ -56,16 +90,22 @@ canvas {
     cursor: pointer;
 }
 
-#pauseMenu button {
-    margin: 0.5rem auto;
-}
-
-#menu button:hover, #pauseMenu button:hover {
+#menu button:hover,
+#pauseMenu button:hover,
+#gameOver button:hover,
+#previewBtn:hover {
     background: white;
     color: black;
 }
 
+#menu button.active {
+    background: white;
+    color: black;
+}
 
+/* =====================
+   SETTINGS OPTIONS
+   ===================== */
 .options {
     display: flex;
     justify-content: center;
@@ -84,10 +124,11 @@ canvas {
     color: black;
 }
 
-#menu.hidden, #pauseMenu.hidden, #settingsMenu.hidden {
-    display: none;
-}
-
-#menu button.hidden {
-    display: none;
+/* =====================
+   PREVIEW BUTTON
+   ===================== */
+#previewBtn {
+    margin-top: 1rem;
+    position: relative;
+    z-index: 10;
 }

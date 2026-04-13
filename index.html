@@ -1,31 +1,32 @@
 <!DOCTYPE html>
 <html>
 
-<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
-
 <head>
     <title>SNAKE</title>
     <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
 </head>
 
-<div id="pauseMenu" class="hidden">
-    <h1>PAUSED</h1>
-    <button id="resumeBtn">RESUME</button>
-    <button id="newGameBtn">NEW GAME</button>
-</div>
-
 <body>
-    <canvas id="gameCanvas"></canvas>
-    <div id="menu">
+    <div id="gameWrapper">
+        <canvas id="gameCanvas"></canvas>
+        <button id="previewBtn" class="hidden">SHOW SNAKE</button>
+    </div>
 
+    <div id="gameOver" class="overlay hidden">
+        <div id="gameOverContent">
+            <h1>GAME OVER</h1>
+            <button class="newGameBtn">NEW GAME</button>
+        </div>
+    </div>
+
+    <div id="menu" class="overlay">
         <div id="mainMenu">
             <h1>SNAKE</h1>
             <button id="startBtn">START</button>
             <button id="settingsBtn">SETTINGS</button>
         </div>
-
         <div id="settingsMenu" class="hidden">
-
             <p>APPLES</p>
             <div class="options">
                 <button class="opt active" data-apples="1">1</button>
@@ -34,18 +35,21 @@
                 <button class="opt" data-apples="10">10</button>
                 <button class="opt" data-apples="50">50</button>
             </div>
-
             <p>GRID SIZE</p>
             <div class="options">
                 <button class="opt" data-grid="8">8x8</button>
                 <button class="opt active" data-grid="12">12x12</button>
                 <button class="opt" data-grid="16">16x16</button>
             </div>
-
             <button id="backBtn">CLOSE</button>
         </div>
     </div>
 
+    <div id="pauseMenu" class="overlay hidden">
+        <h1>PAUSED</h1>
+        <button id="resumeBtn">RESUME</button>
+        <button class="newGameBtn">NEW GAME</button>
+    </div>
 
     <script src="script.js"></script>
 </body>
