@@ -90,7 +90,7 @@ document.querySelectorAll(".newGameBtn").forEach(btn => {
         document.getElementById("gameWin").classList.add("hidden");
         document.getElementById("pauseMenu").classList.add("hidden");
         document.getElementById("gameOver").classList.add("hidden");
-        document.getElementById("previewBtn").classList.toggle("hidden");
+        document.getElementById("previewBtn").classList.add("hidden");
         document.getElementById("menu").classList.remove("hidden");
         paused = true;
         gameStarted = false;
